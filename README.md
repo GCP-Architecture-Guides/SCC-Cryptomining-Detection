@@ -25,7 +25,7 @@ From the root folder, run the following commands:
 git clone https://github.com/GCP-Architecture-Guides/SCC-Cryptomining-Detection.git
 cd SCC-Cryptomining-Detection
 export working_proj="YOUR-PROJECT-ID"
-sh SCC-Config-SCAN-SCRIPT.sh
+sh SCC-CONFIG-SCAN-SCRIPT.sh
 ```
 
 Note: The project id can be updated within the script file. The project should have Essential Contact API enabled.
