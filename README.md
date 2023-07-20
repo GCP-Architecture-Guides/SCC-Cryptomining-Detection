@@ -1,6 +1,6 @@
 # SCC Cryptomining Detection Program 
 
-Google Cloud will offer to eligible Security Command Center (SCC) Premium customers financial protection to defray the costs of undetected cryptomining attacks in their Google Cloud environment.
+Google provides Security Command Center Premium customers with financial protection to defray the Compute Engine VM costs related to undetected and unauthorized cryptomining attacks in their Compute Engine VM environment.
 
 
 ## How to run the script?
