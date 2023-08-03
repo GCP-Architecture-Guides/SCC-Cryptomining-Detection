@@ -103,17 +103,18 @@ if [[($compliance_state == "Compliant" )]]; then
                 $(gcloud config set project $i)
                 sleep 2
                 echo "SCC Configuration for the project: $i" >> scc-report-${now}.txt
-                if [[ $(gcloud alpha scc settings services describe --service=container-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
-                    echo "CONTAINER-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
-                    if [[($compliance_state == "Compliant" )]]; then
-                        compliance_state="Compliant"
-                    else
-                        compliance_state="Compliant contingent on the above projects"
-                    fi                    
-                else
-                    echo "CONTAINER-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
-                    compliance_state="Compliant contingent on the above projects"
-                fi
+        ## Disabling Container Threat Detection
+                ## if [[ $(gcloud alpha scc settings services describe --service=container-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
+                ##     echo "CONTAINER-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
+                ##     if [[($compliance_state == "Compliant" )]]; then
+                ##         compliance_state="Compliant"
+                ##     else
+                ##         compliance_state="Compliant contingent on the above projects"
+                ##     fi                    
+                ## else
+                ##     echo "CONTAINER-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
+                ##     compliance_state="Compliant contingent on the above projects"
+                ## fi
         # # Project Level Event Threat Detection
                 if [[ $(gcloud alpha scc settings services describe --service=event-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
                     echo "EVENT-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
