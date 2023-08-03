@@ -1,11 +1,14 @@
-# SCC Cryptomining Detection Program 
+# SCC cryptomining detection best practices validation script
 
-Google provides Security Command Center Premium customers with financial protection to defray the Compute Engine VM costs related to undetected and unauthorized cryptomining attacks in their Compute Engine VM environment.
+This script checks metadata in your Google Cloud environment to see if the best practices for detecting cryptocurrency mining (cryptomining) attacks are implemented in the environment.
+
+The correct and complete implementation of these best practices helps to ensure that your organization meets the requirements of the Security Command Center Cryptomining Protection Program, which may provide credits of up to $1,000,000 USD for Google Cloud Compute Engine costs that are attributed to an undetected cryptomining attack.
+
 
 
 ## How to run the script?
 
-The following steps should be executed in Cloud Shell in the Google Cloud Console. 
+The following steps should be executed in your organization in Cloud Shell in the Google Cloud Console.
 
 
 ## Get the bash script
@@ -14,6 +17,15 @@ Clone this github repository go get the script.
 ``` 
 git clone https://github.com/GCP-Architecture-Guides/SCC-Cryptomining-Detection.git
 
+```
+
+
+## Prerequisites
+
+You need the following Identity and Access Management (IAM) permissions to run this script in your Google Cloud environment.
+
+``` 
+To Be Updated
 ```
 
 
