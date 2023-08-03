@@ -13,8 +13,20 @@
 ##  limitations under the License.
 
 
-##  This code creates demo environment for CSA Vertex AI Notebook with DLP Integration  ##
-##  This demo code is not built for production workload ##
+##  This script checks your Google Cloud organization for the
+##  implementation of the best practices for detecting cryptocurrency
+##  mining (cryptomining) attacks.
+##  Use this script to help check that your Google Cloud organization
+##  meets the eligibility requirements for the Security Command Center
+##  cryptomining protection program 
+
+
+##  This script relies on the IAM privileges of the user or service 
+##  account running it. IAM access or security controls (e.g., VPC-SC) 
+##  may prevent you from getting detailed information on each project's 
+##  evaluation status. Where applicable, the script output will 
+##  outline if it's unable to evaluate a project.
+
 
 #!/bin/bash
 
@@ -24,7 +36,7 @@
 
 now=`date +"%Y-%m-%d"`
 compliance_state="not determined yet"
-echo  "SCC Operational Best Practices Report Dated:${now}" > scc-report-${now}.txt
+echo  "Cryptomining detection best practices Report Dated:${now}" > scc-report-${now}.txt
 $(gcloud config set project $working_proj)
 count=( $(gcloud projects get-ancestors $working_proj | awk 'END{print NR}') )
 count="$(($count - 2))"
@@ -36,11 +48,11 @@ if [[ $(gcloud organizations get-iam-policy $org_id --flatten="bindings[].member
         echo "SCC service account is ENABLED at org level and has securitycenter.controlServiceAgent role" >> scc-report-${now}.txt
         compliance_state="Compliant"
 else
-        echo "SCC service account is not configured appropriately" >> scc-report-${now}.txt
+        echo "SCC service account does not have organization-level permissions or does not have the securitycenter.controlServiceAgent" >> scc-report-${now}.txt
         compliance_state="Non-Compliant"
 fi
 
-if [[ $(gcloud beta essential-contacts compute --notification-categories=security --organization=$org_id ) ]]; then
+if [[ $(gcloud essential-contacts compute --notification-categories=security --organization=$org_id ) ]]; then
         echo "ESSENTIAL-CONTACTS for security is ENABLED for the organization" >> scc-report-${now}.txt
         if [[($compliance_state == "Compliant" )]]; then
                 compliance_state="Compliant"
@@ -53,7 +65,7 @@ else
 fi
 
 service=(
-    "container-threat-detection"
+#    "container-threat-detection"
     "event-threat-detection"
     "virtual-machine-threat-detection"
 )
@@ -76,7 +88,7 @@ do
 done
 $(gcloud config unset project)
 
-gcloud asset search-all-resources --asset-types=cloudresourcemanager.googleapis.com/Project --scope=organizations/873180247571 --format="value(name)" | awk -F"/" '{print (NF>1)? $NF : ""}' | sort -u > proj-lst-cai.txt
+gcloud asset search-all-resources --asset-types=cloudresourcemanager.googleapis.com/Project --scope=organizations/$org_id --format="value(name)" | awk -F"/" '{print (NF>1)? $NF : ""}' | sort -u > proj-lst-cai.txt
 gcloud projects list | grep PROJECT_ID | awk {'print $2'} |  sort -u > proj-lst.txt
 projects=( $(comm -12 proj-lst-cai.txt proj-lst.txt) )
 
@@ -151,3 +163,4 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 echo "Your organization id ($org_id) is $compliance_state" >> scc-report-${now}.txt
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
 echo -e "Integrate SCC with your existing security operations tools (e.g., SIEM, SOAR) to respond to \nand triage security findings that indicate the potential or presence of cryptomining attacks. \nFor more information, please visit \nhttps://cloud.google.com/security-command-center/docs/cryptomining-detection-best-practices#enable_stage-0_event_detection" >> scc-report-${now}.txt
+echo -e "Enable " >> scc-report-${now}.txt
