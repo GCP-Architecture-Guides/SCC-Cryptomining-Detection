@@ -22,10 +22,14 @@ git clone https://github.com/GCP-Architecture-Guides/SCC-Cryptomining-Detection.
 
 ## Prerequisites
 
-You need the following Identity and Access Management (IAM) permissions to run this script in your Google Cloud environment.
+You need the following Identity and Access Management (IAM) roles to run this script in your Google Cloud environment.
 
 ``` 
-To Be Updated
+Cloud Asset Viewer
+DNS Reader
+Essential Contacts Viewer
+Security Center Settings Viewer
+Service Usage Consumer
 ```
 
 
