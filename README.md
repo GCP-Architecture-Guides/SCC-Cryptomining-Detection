@@ -34,7 +34,7 @@ To Be Updated
 From the root folder, run the following commands:
 
 ``` 
-git clone https://github.com/GCP-Architecture-Guides/SCC-Cryptomining-Detection.git
+git clone https://github.com/GCP-Architecture-Guides/SCC-cryptomining-detection.git
 cd SCC-Cryptomining-Detection
 export working_proj="YOUR-PROJECT-ID"
 sh SCC-CONFIG-SCAN-SCRIPT.sh
