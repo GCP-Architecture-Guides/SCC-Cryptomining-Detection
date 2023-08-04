@@ -25,7 +25,7 @@
 ##  account running it. IAM access or security controls (e.g., VPC-SC) 
 ##  may prevent you from getting detailed information on each project's 
 ##  evaluation status. Where applicable, the script output will 
-##  outline if it's unable to evaluate a project.
+##  state if it's unable to evaluate a project.
 
 
 #!/bin/bash
@@ -36,7 +36,7 @@
 
 now=`date +"%Y-%m-%d"`
 compliance_state="not determined yet"
-echo  "Cryptomining detection best practices Report Dated:${now}" > scc-report-${now}.txt
+echo  "Cryptomining detection best practices report dated:${now}" > scc-report-${now}.txt
 $(gcloud config set project $working_proj)
 count=( $(gcloud projects get-ancestors $working_proj | awk 'END{print NR}') )
 count="$(($count - 2))"
@@ -103,7 +103,7 @@ if [[($compliance_state == "Compliant" )]]; then
                 $(gcloud config set project $i)
                 sleep 2
                 echo "SCC Configuration for the project: $i" >> scc-report-${now}.txt
-        ## Disabling Container Threat Detection
+        ## Disabling Container Threat Detection check
                 ## if [[ $(gcloud alpha scc settings services describe --service=container-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
                 ##     echo "CONTAINER-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
                 ##     if [[($compliance_state == "Compliant" )]]; then
@@ -163,5 +163,5 @@ fi
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
 echo "Your organization id ($org_id) is $compliance_state" >> scc-report-${now}.txt
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
-echo -e "Integrate SCC with your existing security operations tools (e.g., SIEM, SOAR) to respond to \nand triage security findings that indicate the potential or presence of cryptomining attacks. \nFor more information, please visit \nhttps://cloud.google.com/security-command-center/docs/cryptomining-detection-best-practices#enable_stage-0_event_detection" >> scc-report-${now}.txt
-echo -e "Enable " >> scc-report-${now}.txt
+echo -e "Integrate SCC with your existing security operations tools (e.g., SIEM, SOAR) to respond to \nand triage security findings that indicate the potential or presence of cryptomining attacks. \nFor more information, please visit \nhttps://cloud.google.com/security-command-center/docs/cryptomining-detection-best-practices#integrate-seim-soar-with-scc" >> scc-report-${now}.txt
+echo -e "Consider enabling SCC premium at the organization level as it's generally more cost effective \nthan enabling SCC premium on all projects individually." >> scc-report-${now}.txt
