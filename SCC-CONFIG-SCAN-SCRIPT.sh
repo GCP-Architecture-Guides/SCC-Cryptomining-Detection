@@ -164,4 +164,4 @@ echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 echo "Your organization id ($org_id) is $compliance_state" >> scc-report-${now}.txt
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
 echo -e "Integrate SCC with your existing security operations tools (e.g., SIEM, SOAR) to respond to \nand triage security findings that indicate the potential or presence of cryptomining attacks. \nFor more information, please visit \nhttps://cloud.google.com/security-command-center/docs/cryptomining-detection-best-practices#integrate-seim-soar-with-scc" >> scc-report-${now}.txt
-echo -e "Consider enabling SCC premium at the organization level as it's generally more cost effective \nthan enabling SCC premium on all projects individually." >> scc-report-${now}.txt
+echo -e "Consider enabling SCC premium at the organization level as it's generally more cost effective \nthan enabling SCC premium on all projects individually." >> scc-report-${now}.txt
