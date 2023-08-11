@@ -35,7 +35,8 @@
 # working_proj="XXXXXXXXXX" 
 
 now=`date +"%Y-%m-%d"`
-compliance_state="not determined yet"
+org_compliance_state="not determined yet"
+project_compliance_state="Compliant"
 echo  "Cryptomining detection best practices report dated:${now}" > scc-report-${now}.txt
 $(gcloud config set project $working_proj)
 count=( $(gcloud projects get-ancestors $working_proj | awk 'END{print NR}') )
@@ -46,22 +47,22 @@ echo "Organization level SCC Configuration: $org_id"  >> scc-report-${now}.txt
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"  >> scc-report-${now}.txt
 if [[ $(gcloud organizations get-iam-policy $org_id --flatten="bindings[].members" --format='table(bindings.role)' --filter="bindings.members:service-org-$org_id@security-center-api.iam.gserviceaccount.com" | awk '{print $2}' | grep securitycenter.controlServiceAgent ) ]]; then
         echo "SCC service account is ENABLED at org level and has securitycenter.controlServiceAgent role" >> scc-report-${now}.txt
-        compliance_state="Compliant"
+        org_compliance_state="Compliant"
 else
-        echo "SCC service account does not have organization-level permissions or does not have the securitycenter.controlServiceAgent" >> scc-report-${now}.txt
-        compliance_state="Non-Compliant"
+        echo "SCC service account does not have org level permissions or does not have the securitycenter.controlServiceAgent role" >> scc-report-${now}.txt
+        org_compliance_state="Non-Compliant"
 fi
 
 if [[ $(gcloud essential-contacts compute --notification-categories=security --organization=$org_id ) ]]; then
         echo "ESSENTIAL-CONTACTS for security is ENABLED for the organization" >> scc-report-${now}.txt
-        if [[($compliance_state == "Compliant" )]]; then
-                compliance_state="Compliant"
+        if [[($org_compliance_state == "Compliant" )]]; then
+                org_compliance_state="Compliant"
         else
-                compliance_state="Non-Compliant"
+                org_compliance_state="Non-Compliant"
         fi
 else
         echo "ESSENTIAL-CONTACTS for security is DISABLED for the organization" >> scc-report-${now}.txt
-        compliance_state="Non-Compliant"
+        org_compliance_state="Non-Compliant"
 fi
 
 service=(
@@ -75,14 +76,14 @@ for services in "${service[@]}"
 do
     if [[ $(gcloud alpha scc settings services describe-explicit --service=$services  --organization=$org_id --quiet | grep 'ENABLED' ) ]]; then
         echo "${services^^} is ENABLED" >> scc-report-${now}.txt
-        if [[($compliance_state == "Compliant" )]]; then
-                compliance_state="Compliant"
+        if [[($org_compliance_state == "Compliant" )]]; then
+                org_compliance_state="Compliant"
         else
-                compliance_state="Non-Compliant"
+                org_compliance_state="Non-Compliant"
         fi
     else
         echo "${services^^} is DISABLED or Your access is denied" >> scc-report-${now}.txt
-        compliance_state="Non-Compliant"
+        org_compliance_state="Non-Compliant"
     fi
     #sleep 60
 done
@@ -94,74 +95,88 @@ projects=( $(comm -12 proj-lst-cai.txt proj-lst.txt) )
 
 
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"  >> scc-report-${now}.txt
-if [[($compliance_state == "Compliant" )]]; then
-        echo -e "Project level SCC Configuration"  >> scc-report-${now}.txt
+    echo -e "Project level SCC Configuration"  >> scc-report-${now}.txt
 #        projects=( $(gcloud projects list | grep PROJECT_ID | awk {'print $2'}) )
-        for i in "${projects[@]}"
-            do
-                echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
-                $(gcloud config set project $i)
-                sleep 2
-                echo "SCC Configuration for the project: $i" >> scc-report-${now}.txt
-        ## Disabling Container Threat Detection check
-                ## if [[ $(gcloud alpha scc settings services describe --service=container-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
-                ##     echo "CONTAINER-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
-                ##     if [[($compliance_state == "Compliant" )]]; then
-                ##         compliance_state="Compliant"
-                ##     else
-                ##         compliance_state="Compliant contingent on the above projects"
-                ##     fi                    
-                ## else
-                ##     echo "CONTAINER-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
-                ##     compliance_state="Compliant contingent on the above projects"
-                ## fi
-        # # Project Level Event Threat Detection
-                if [[ $(gcloud alpha scc settings services describe --service=event-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
-                    echo "EVENT-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
-                    if [[($compliance_state == "Compliant" )]]; then
-                        compliance_state="Compliant"
+    for i in "${projects[@]}"
+        do
+            echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
+            $(gcloud config set project $i)
+            #sleep 2
+            echo "SCC Configuration for the project: $i" >> scc-report-${now}.txt
+    ## Disabling Container Threat Detection check
+            ## if [[ $(gcloud alpha scc settings services describe --service=container-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
+            ##     echo "CONTAINER-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
+            ##     if [[($project_compliance_state == "Compliant" )]]; then
+            ##         project_compliance_state="Compliant"
+            ##     else
+            ##         project_compliance_state="Compliant contingent on the below projects"
+            ##     fi                    
+            ## else
+            ##     echo "CONTAINER-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
+            ##     project_compliance_state="Compliant contingent on the below projects"
+            ##     non_compliant_project+=("$i")
+            ## fi
+    # # Project Level Event Threat Detection
+            if [[ $(gcloud alpha scc settings services describe --service=event-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
+                echo "EVENT-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
+                if [[($project_compliance_state == "Compliant" )]]; then
+                    project_compliance_state="Compliant"
+                else
+                    project_compliance_state="Compliant contingent on the below projects"
+                fi
+            else
+                echo "EVENT-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
+                project_compliance_state="Compliant contingent on the below projects"
+                non_compliant_project+=("$i")
+            fi
+    # # Project Level Virtual Machine Threat Detection
+            if [[ $(gcloud alpha scc settings services describe --service=virtual-machine-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
+                echo "VIRTUAL-MACHINE-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
+                if [[($project_compliance_state == "Compliant" )]]; then
+                    project_compliance_state="Compliant"
+                else
+                    project_compliance_state="Compliant contingent on the below projects"
+                fi                    
+            else
+                echo "VIRTUAL-MACHINE-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
+                project_compliance_state="Compliant contingent on the below projects"
+                non_compliant_project+=("$i")
+            fi
+            if [[ $(gcloud services list --enabled --filter="NAME:dns.googleapis.com" | grep dns) ]]; then
+                echo "DNS API is ENABLED "  >> scc-report-${now}.txt
+                if [[ $(gcloud dns policies list | grep LOGGING) ]]; then
+                    echo "DNS logging is ENABLED "  >> scc-report-${now}.txt
+                    if [[($project_compliance_state == "Compliant" )]]; then
+                        project_compliance_state="Compliant"
                     else
-                        compliance_state="Compliant contingent on the above projects"
+                        project_compliance_state="Compliant contingent on the below projects"
                     fi
                 else
-                    echo "EVENT-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
-                    compliance_state="Compliant contingent on the above projects"
-                fi
-        # # Project Level Virtual Machine Threat Detection
-                if [[ $(gcloud alpha scc settings services describe --service=virtual-machine-threat-detection --project=$i --quiet | grep 'ENABLED' ) ]]; then
-                    echo "VIRTUAL-MACHINE-THREAT-DETECTION is ENABLED " >> scc-report-${now}.txt
-                    if [[($compliance_state == "Compliant" )]]; then
-                        compliance_state="Compliant"
-                    else
-                        compliance_state="Compliant contingent on the above projects"
-                    fi                    
-                else
-                    echo "VIRTUAL-MACHINE-THREAT-DETECTION is DISABLED or Your access is denied " >> scc-report-${now}.txt
-                    compliance_state="Compliant contingent on the above projects"
-                fi
-                if [[ $(gcloud services list --enabled --filter="NAME:dns.googleapis.com" | grep dns) ]]; then
-                    echo "DNS API is ENABLED "  >> scc-report-${now}.txt
-                    if [[ $(gcloud dns policies list | grep LOGGING) ]]; then
-                        echo "DNS logging is ENABLED "  >> scc-report-${now}.txt
-                        if [[($compliance_state == "Compliant" )]]; then
-                            compliance_state="Compliant"
-                        else
-                            compliance_state="Compliant contingent on the above projects"
-                        fi
-                    else
-                        echo "DNS logging is DISABLED "  >> scc-report-${now}.txt
-                        compliance_state="Compliant contingent on the above projects"
-                    fi         
-                else
-                    echo "DNS API is DISABLED "  >> scc-report-${now}.txt
                     echo "DNS logging is DISABLED "  >> scc-report-${now}.txt
-                    compliance_state="Compliant contingent on the above projects"
-                fi 
-            done
-        $(gcloud config unset project)
+                    project_compliance_state="Compliant contingent on the below projects"
+                    non_compliant_project+=("$i")
+                fi         
+            else
+                echo "DNS API is DISABLED "  >> scc-report-${now}.txt
+                echo "DNS logging is DISABLED "  >> scc-report-${now}.txt
+                project_compliance_state="Compliant contingent on the below projects"
+                non_compliant_project+=("$i")
+            fi 
+        done
+    $(gcloud config unset project)
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
+echo "Your organization id ($org_id) is $org_compliance_state" >> scc-report-${now}.txt
+if [[ "$org_compliance_state" != "Compliant" ]] || [[ "$project_compliance_state" != "Compliant" ]]; then
+    echo "Your project level SCC configuration is $project_compliance_state" >> scc-report-${now}.txt
 fi
+if [[ "$project_compliance_state" != "Compliant" ]]; then
+    printf '%s\n' "${non_compliant_project[@]}" |sort -u -b |sed 's/^ *//' >> scc-report-${now}.txt
+fi
+
 echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
-echo "Your organization id ($org_id) is $compliance_state" >> scc-report-${now}.txt
-echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" >> scc-report-${now}.txt
-echo -e "Integrate SCC with your existing security operations tools (e.g., SIEM, SOAR) to respond to \nand triage security findings that indicate the potential or presence of cryptomining attacks. \nFor more information, please visit \nhttps://cloud.google.com/security-command-center/docs/cryptomining-detection-best-practices#integrate-seim-soar-with-scc" >> scc-report-${now}.txt
-echo -e "Consider enabling SCC premium at the organization level as it's generally more cost effective \nthan enabling SCC premium on all projects individually." >> scc-report-${now}.txt
+echo -e "If not already integrated, integrate SCC with your existing security operations tools (e.g., SIEM, SOAR) to respond to \nand triage security findings that indicate the potential or presence of cryptomining attacks. \nFor more information, please visit \nhttps://cloud.google.com/security-command-center/docs/cryptomining-detection-best-practices#integrate-seim-soar-with-scc" >> scc-report-${now}.txt
+if [[($org_compliance_state == "Non-Compliant" )]]; then
+    if [[($project_compliance_state == "Compliant" )]]; then
+        echo -e "Consider enabling SCC premium at the organization level as it's generally more cost effective \nthan enabling SCC premium on all projects individually." >> scc-report-${now}.txt
+    fi
+fi
